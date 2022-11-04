@@ -1,9 +1,16 @@
+cmake_minimum_required(VERSION 3.24)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(namespace "mavlinkcpp")
 
 project("mavlink-cpp"
     DESCRIPTION "Easily implement mavlink in C++"
     VERSION 0.0.1
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-address-of-packed-member")
 
 if (NOT CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     message(STATUS "This project has a top-level one called [${CMAKE_PROJECT_NAME}]")
@@ -20,6 +27,28 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
 )
 
+##### Build mavlink
+set(MAVLINK_DIALECT "development") # standard, development, etc
+set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
+set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
+
+add_custom_target(mavlink_c_generate
+        COMMAND ${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
+            --lang C --wire-protocol 2.0
+            #--no-validate
+            #--strict-units
+            --output ${MAVLINK_LIBRARY_DIR}
+            ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml)
+
+add_library(mavlink_c INTERFACE)
+add_dependencies(mavlink_c mavlink_c_generate)
+target_sources(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h)
+set_source_files_properties(${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h PROPERTIES GENERATED true)
+target_include_directories(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR} ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT})
+target_compile_options(mavlink_c INTERFACE -Wno-address-of-packed-member -Wno-cast-align)
+
+add_dependencies(${PROJECT_NAME} mavlink_c)
+
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
 # paths.
@@ -27,9 +56,12 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         # where the library itself will look for its internal headers
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}
+
     PUBLIC
         # where top-level project will look for the library's public headers
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}>
         # where external projects will look for the library's public headers
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -56,7 +88,7 @@ endif()
 
 # without it public headers won't get installed
 set(public_headers
-    include/Mavlink.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
 )
 # note that ${public_headers} has to be in quotes
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")

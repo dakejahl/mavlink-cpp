@@ -1,8 +1,5 @@
 all:
-	cmake -Bbuild -H.; cmake --build build
-
-tests:
-	cmake -Bbuild -H.; cmake --build build --target test
+	@cmake -Bbuild -H.; cmake --build build --target install -j 12
 
 clean:
 	@rm -rf build/

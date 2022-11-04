@@ -1,6 +1,6 @@
 #include <Mavlink.hpp>
 
-#include <parameters.hpp>
+// #include <parameters.hpp>
 
 namespace mavlink
 {
@@ -111,12 +111,12 @@ void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 
 	LOG(GREEN_TEXT "Sending parameters to GCS" NORMAL_TEXT);
 
-	size_t count = 0;
-	auto params = params::parameters();
+	// size_t count = 0;
+	// auto params = params::parameters();
 
-	for (auto& [name, value] : params) {
-		send_param_value(name, value, count++, params.size());
-	}
+	// for (auto& [name, value] : params) {
+	// 	send_param_value(name, value, count++, params.size());
+	// }
 }
 
 void Mavlink::handle_param_set(const mavlink_message_t& message)
@@ -139,12 +139,12 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 	std::string name = std::string(msg.param_id, length);
 	float value = msg.param_value;
 
-	bool success = params::set_parameter(name, value);
+	// bool success = params::set_parameter(name, value);
 
-	if (success) {
-		auto params = params::parameters();
-		send_param_value(name, value, std::distance(params.begin(), params.find(name)), params.size());
-	}
+	// if (success) {
+	// 	auto params = params::parameters();
+	// 	send_param_value(name, value, std::distance(params.begin(), params.find(name)), params.size());
+	// }
 }
 
 void Mavlink::send_param_value(std::string name, float value, uint16_t index, uint16_t total_count)
