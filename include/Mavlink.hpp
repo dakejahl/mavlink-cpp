@@ -6,7 +6,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <UdpConnection.hpp>
 #include <ThreadSafeQueue.hpp>
 
 namespace mavlink
