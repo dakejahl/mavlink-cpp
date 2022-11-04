@@ -1,12 +1,16 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <queue>
 #include <mutex>
 #include <memory>
 #include <unordered_map>
 
+#include <Connection.hpp>
 #include <ThreadSafeQueue.hpp>
+
+#include <mavlink.h>
 
 namespace mavlink
 {
