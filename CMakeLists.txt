@@ -27,7 +27,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
 )
 
-##### Build mavlink
+##### Build mavlink from source
 set(MAVLINK_DIALECT "development") # standard, development, etc
 set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
 set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
@@ -48,6 +48,12 @@ target_include_directories(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR} ${MAVLINK_
 target_compile_options(mavlink_c INTERFACE -Wno-address-of-packed-member -Wno-cast-align)
 
 add_dependencies(${PROJECT_NAME} mavlink_c)
+
+
+##########################################################
+# The below is taken from:
+# https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
+##########################################################
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
