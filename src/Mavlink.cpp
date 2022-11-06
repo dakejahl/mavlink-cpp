@@ -6,10 +6,10 @@
 namespace mavlink
 {
 
-Mavlink::Mavlink(uint8_t sysid, uint8_t compid, std::string connection_string)
-	: _sysid(sysid)
-	, _compid(compid)
-	, _connection_string(connection_string)
+static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
+
+Mavlink::Mavlink(const ConfigurationSettings& settings)
+	: _settings(settings)
 {
 	setup_subscriptions();
 }
@@ -21,19 +21,19 @@ Mavlink::~Mavlink()
 
 void Mavlink::start()
 {
-	if (_connection_string.find("serial:") != std::string::npos) {
+	if (_settings.connection_url.find("serial:") != std::string::npos) {
 		// TODO: create serial
 
-	} else if (_connection_string.find("udp:") != std::string::npos) {
+	} else if (_settings.connection_url.find("udp:") != std::string::npos) {
 
 		// We provide the connection class with a message handler callback function
-		_connection = std::make_unique<UdpConnection>(_connection_string, [this](const mavlink_message_t& message) { handle_message(message); });
+		_connection = std::make_unique<UdpConnection>(_settings.connection_url, [this](const mavlink_message_t& message) { handle_message(message); });
 
 		// Spawns thread -- all connection handling happens in that thread context
 		_connection->start();
 
 	} else {
-		LOG("Invalid connection string: %s\nNo connection started", _connection_string.c_str());
+		LOG("Invalid connection string: %s\nNo connection started", _settings.connection_url.c_str());
 	}
 }
 
@@ -73,6 +73,29 @@ void Mavlink::send_message(const mavlink_message_t& message)
 	}
 }
 
+void Mavlink::send_heartbeat()
+{
+	static uint64_t last_heartbeat_ms = 0;
+
+	uint64_t time_now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::
+			    now().time_since_epoch()).count();
+
+	if (time_now > last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
+
+		mavlink_heartbeat_t hb = {};
+		hb.type = _settings.mav_type;
+		hb.autopilot = _settings.mav_autopilot;
+		hb.system_status = MAV_STATE_ACTIVE; // TODO: report failsafes like this? Or something?
+
+		mavlink_message_t message;
+		mavlink_msg_heartbeat_encode(_settings.sysid, _settings.compid, &message, &hb);
+
+		send_message(message);
+
+		last_heartbeat_ms = time_now;
+	}
+}
+
 // TODO: EVERYTHING BELOW THIS GOES INTO USER FILE FOR LIBRARY
 
 void Mavlink::setup_subscriptions()
@@ -88,8 +111,8 @@ void Mavlink::handle_command_long(const mavlink_message_t& message)
 	mavlink_command_long_t msg;
 	mavlink_msg_command_long_decode(&message, &msg);
 
-	bool for_us = msg.target_system == _sysid && msg.target_component == _compid;
-	bool for_system = msg.target_system == _sysid && msg.target_component == 0;
+	bool for_us = msg.target_system == _settings.sysid && msg.target_component == _settings.compid;
+	bool for_system = msg.target_system == _settings.sysid && msg.target_component == 0;
 	bool broadcast = msg.target_system == 0 && msg.target_component == 0;
 
 	if (for_us || for_system || broadcast) {
@@ -107,7 +130,7 @@ void Mavlink::handle_distance_sensor(const mavlink_message_t& message)
 	mavlink_distance_sensor_t msg;
 	mavlink_msg_distance_sensor_decode(&message, &msg);
 
-	bool from_autopilot = message.sysid == _sysid;
+	bool from_autopilot = message.sysid == _settings.sysid;
 
 	if (from_autopilot) {
 		_rangefinder_distance_cm.store(msg.current_distance);
@@ -119,8 +142,8 @@ void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 	mavlink_param_request_list_t msg;
 	mavlink_msg_param_request_list_decode(&message, &msg);
 
-	bool for_us = msg.target_system == _sysid && msg.target_component == _compid;
-	bool for_system = msg.target_system == _sysid && msg.target_component == 0;
+	bool for_us = msg.target_system == _settings.sysid && msg.target_component == _settings.compid;
+	bool for_system = msg.target_system == _settings.sysid && msg.target_component == 0;
 	bool broadcast = msg.target_system == 0 && msg.target_component == 0;
 	bool handle_message = for_us || for_system || broadcast;
 
@@ -143,7 +166,7 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 	mavlink_param_set_t msg;
 	mavlink_msg_param_set_decode(&message, &msg);
 
-	bool for_us = msg.target_system == _sysid && msg.target_component == _compid;
+	bool for_us = msg.target_system == _settings.sysid && msg.target_component == _settings.compid;
 
 	if (!for_us) {
 		return;
@@ -175,7 +198,7 @@ void Mavlink::send_param_value(std::string name, float value, uint16_t index, ui
 	pv.param_type = MAV_PARAM_TYPE_REAL32;
 
 	mavlink_message_t message;
-	mavlink_msg_param_value_encode(_sysid, _compid, &message, &pv);
+	mavlink_msg_param_value_encode(_settings.sysid, _settings.compid, &message, &pv);
 
 	send_message(message);
 }
@@ -189,7 +212,7 @@ void Mavlink::send_command_ack(const MavCommand& mav_cmd, int result)
 	ack.target_component = mav_cmd.sender_compid;
 
 	mavlink_message_t message;
-	mavlink_msg_command_ack_encode(_sysid, _compid, &message, &ack);
+	mavlink_msg_command_ack_encode(_settings.sysid, _settings.compid, &message, &ack);
 
 	send_message(message);
 }
@@ -205,7 +228,7 @@ void Mavlink::send_status_text(std::string&& text, int severity)
 	status.text[49] = '\0'; // Add null terminator
 
 	mavlink_message_t message;
-	mavlink_msg_statustext_encode(_sysid, _compid, &message, &status);
+	mavlink_msg_statustext_encode(_settings.sysid, _settings.compid, &message, &status);
 
 	send_message(message);
 }
