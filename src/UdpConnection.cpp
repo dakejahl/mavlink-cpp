@@ -92,15 +92,11 @@ void UdpConnection::send_thread_main()
 
 			mavlink_message_t message;
 
-			if (_message_outbox_queue.pop_front(&message)) {
+			if (_message_outbox_queue.pop_front(&message, /* blocking */ true)) {
 				if (!send_message(message)) {
 					LOG(RED_TEXT "Send message failed!" NORMAL_TEXT);
 				}
 			}
-
-			// TODO: extend ThreadSafeQueue to optionally block-wait for items using condition variable
-			// rate limit 100Hz
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 		} else {
 			std::this_thread::sleep_for(std::chrono::seconds(1));

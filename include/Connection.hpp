@@ -22,7 +22,7 @@ public:
 	virtual bool send_message(const mavlink_message_t& message) = 0;
 
 protected:
-	ThreadSafeQueue<mavlink_message_t> _message_outbox_queue {20};
+	ThreadSafeQueue<mavlink_message_t> _message_outbox_queue {100};
 
 	uint8_t _target_sysid {};
 	uint8_t _target_compid {};

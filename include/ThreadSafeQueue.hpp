@@ -2,7 +2,7 @@
 
 #include <mutex>
 #include <queue>
-#include <memory>
+#include <condition_variable>
 
 template<class T>
 class ThreadSafeQueue
@@ -12,25 +12,32 @@ public:
 
 	~ThreadSafeQueue()
 	{
-		std::lock_guard<std::mutex> lock(_mutex);
+		std::scoped_lock<std::mutex> lock(_mutex);
 		_queue.clear();
 	}
 
 	bool push_back(const T& item)
 	{
-		std::lock_guard<std::mutex> lock(_mutex);
+		std::scoped_lock<std::mutex> lock(_mutex);
 
 		if (_queue.size() < _max_size) {
 			_queue.push_back(item);
+			_cv.notify_one();
 			return true;
 		}
 
 		return false;
 	};
 
-	bool pop_front(T* item)
+	bool pop_front(T* item, bool blocking = false)
 	{
-		std::lock_guard<std::mutex> lock(_mutex);
+		std::unique_lock<std::mutex> lock(_mutex);
+
+		if (blocking) {
+			while (_queue.empty()) {
+				_cv.wait(lock);
+			}
+		}
 
 		if (_queue.size()) {
 			*item = _queue.front();
@@ -44,5 +51,6 @@ public:
 private:
 	std::deque<T> _queue {};
 	std::mutex _mutex {};
+	std::condition_variable _cv {};
 	size_t _max_size {};
 };

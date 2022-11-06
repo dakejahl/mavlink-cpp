@@ -43,7 +43,7 @@ void Mavlink::stop()
 
 void Mavlink::handle_message(const mavlink_message_t& message)
 {
-	std::lock_guard<std::mutex> lock(_subscriptions_mutex);
+	std::scoped_lock<std::mutex> lock(_subscriptions_mutex);
 
 	if (_message_subscriptions.contains(message.msgid)) {
 		_message_subscriptions[message.msgid](message);
@@ -52,7 +52,7 @@ void Mavlink::handle_message(const mavlink_message_t& message)
 
 void Mavlink::subscribe_to_message(uint16_t message_id, const MessageCallback& callback)
 {
-	std::lock_guard<std::mutex> lock(_subscriptions_mutex);
+	std::scoped_lock<std::mutex> lock(_subscriptions_mutex);
 
 	if (_message_subscriptions.find(message_id) == _message_subscriptions.end()) {
 		_message_subscriptions.emplace(message_id, callback);
