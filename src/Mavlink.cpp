@@ -52,6 +52,7 @@ void Mavlink::subscribe_to_message(uint16_t message_id, const MessageCallback& c
 {
 	if (_message_subscriptions.find(message_id) == _message_subscriptions.end()) {
 		_message_subscriptions.emplace(message_id, callback);
+
 	} else {
 		LOG(RED_TEXT "Mavlink::subscribe_to_message failed, callback already registered" NORMAL_TEXT);
 	}

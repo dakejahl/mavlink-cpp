@@ -27,8 +27,12 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
 )
 
+execute_process(COMMAND astyle --quiet --options=astylerc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp,*.hpp,*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h,*.hpp
+)
+
 ##### Build mavlink from source
->>>>>>> 54eb8f34d5401d633460091ea063c1401f566d99
 set(MAVLINK_DIALECT "development") # standard, development, etc
 set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
 set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
@@ -39,7 +43,8 @@ add_custom_target(mavlink_c_generate
             #--no-validate
             #--strict-units
             --output ${MAVLINK_LIBRARY_DIR}
-            ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml)
+            ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml
+)
 
 add_library(mavlink_c INTERFACE)
 add_dependencies(mavlink_c mavlink_c_generate)
