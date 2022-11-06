@@ -27,6 +27,9 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
 )
 
+#### Fix formatting
+execute_process(COMMAND astyle --quiet --options=astylerc src/*.cpp,*.hpp)
+
 ##### Build mavlink
 set(MAVLINK_DIALECT "development") # standard, development, etc
 set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")

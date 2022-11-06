@@ -52,6 +52,17 @@ void Mavlink::subscribe_to_message(uint16_t message_id, const MessageCallback& c
 {
 	if (_message_subscriptions.find(message_id) == _message_subscriptions.end()) {
 		_message_subscriptions.emplace(message_id, callback);
+	} else {
+		LOG(RED_TEXT "Mavlink::subscribe_to_message failed, callback already registered" NORMAL_TEXT);
+	}
+}
+
+void Mavlink::send_message(const mavlink_message_t& message)
+{
+	if (_connection->connected()) {
+		if (!_connection->queue_message(message)) {
+			LOG(RED_TEXT "Queueing message failed! Message queue full" NORMAL_TEXT);
+		}
 	}
 }
 
@@ -190,15 +201,6 @@ void Mavlink::send_status_text(std::string&& text, int severity)
 	mavlink_msg_statustext_encode(_sysid, _compid, &message, &status);
 
 	send_message(message);
-}
-
-void Mavlink::send_message(const mavlink_message_t& message)
-{
-	if (_connection->connected()) {
-		if (!_connection->queue_message(message)) {
-			LOG(RED_TEXT "Queueing message failed! Message queue full" NORMAL_TEXT);
-		}
-	}
 }
 
 } // end namespace mavlink
