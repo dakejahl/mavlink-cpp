@@ -28,6 +28,8 @@ void Mavlink::start()
 
 		// We provide the connection class with a message handler callback function
 		_connection = std::make_unique<UdpConnection>(_connection_string, [this](const mavlink_message_t& message) { handle_message(message); });
+
+		// Spawns thread -- all connection handling happens in that thread context
 		_connection->start();
 
 	} else {
@@ -38,7 +40,7 @@ void Mavlink::start()
 void Mavlink::stop()
 {
 	// Waits for connection threads to join
-	_connection->stop();
+	if (_connection.get()) _connection->stop();
 }
 
 void Mavlink::handle_message(const mavlink_message_t& message)
