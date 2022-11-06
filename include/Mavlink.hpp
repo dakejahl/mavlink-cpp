@@ -84,6 +84,7 @@ private:
 	ThreadSafeQueue<MavCommand> _command_queue {10};
 
 	// Mavlink message ID --> callback(mavlink_message_t)
+	std::mutex _subscriptions_mutex {};
 	std::unordered_map<uint16_t, MessageCallback> _message_subscriptions {};
 };
 
