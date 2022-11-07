@@ -2,7 +2,7 @@
 
 #include <mavlink.h>
 #include <ThreadSafeQueue.hpp>
-#include <global_include.hpp>
+#include <helpers.hpp>
 
 class Connection
 {

@@ -9,7 +9,4 @@
 
 #define LOG(...) do { printf(__VA_ARGS__); puts(""); } while (0)
 
-static constexpr float CM_PER_FOOT = 30.48;
-static constexpr uint64_t BUTTON_PRESS_MS = 100;
-
 #define millis() std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()

@@ -1,7 +1,6 @@
 #include <Mavlink.hpp>
 
 #include <UdpConnection.hpp>
-// #include <parameters.hpp>
 
 namespace mavlink
 {

@@ -10,7 +10,7 @@
 #include <time.h>
 
 #include <Connection.hpp>
-#include <global_include.hpp>
+#include <helpers.hpp>
 
 namespace mavlink
 {
