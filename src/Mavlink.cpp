@@ -98,12 +98,20 @@ void Mavlink::send_heartbeat()
 
 // TODO: EVERYTHING BELOW THIS GOES INTO USER FILE FOR LIBRARY
 
+void Mavlink::enable_parameters(std::function<std::vector<MavlinkParameter>(void)> request_list_cb,
+				std::function<bool(MavlinkParameter*)> set_cb)
+{
+	_mav_param_request_list_cb = std::move(request_list_cb);
+	_mav_param_set_cb = std::move(set_cb);
+
+	subscribe_to_message(MAVLINK_MSG_ID_PARAM_REQUEST_LIST, [this](const mavlink_message_t& message) { handle_param_request_list(message); });
+	subscribe_to_message(MAVLINK_MSG_ID_PARAM_SET, 			[this](const mavlink_message_t& message) { handle_param_set(message); });
+}
+
 void Mavlink::setup_subscriptions()
 {
 	subscribe_to_message(MAVLINK_MSG_ID_COMMAND_LONG, 		[this](const mavlink_message_t& message) { handle_command_long(message); });
-	subscribe_to_message(MAVLINK_MSG_ID_DISTANCE_SENSOR, 	[this](const mavlink_message_t& message) { handle_distance_sensor(message); });
-	subscribe_to_message(MAVLINK_MSG_ID_PARAM_REQUEST_LIST, [this](const mavlink_message_t& message) { handle_param_request_list(message); });
-	subscribe_to_message(MAVLINK_MSG_ID_PARAM_SET, 			[this](const mavlink_message_t& message) { handle_param_set(message); });
+
 }
 
 void Mavlink::handle_command_long(const mavlink_message_t& message)
@@ -125,18 +133,6 @@ void Mavlink::handle_command_long(const mavlink_message_t& message)
 	}
 }
 
-void Mavlink::handle_distance_sensor(const mavlink_message_t& message)
-{
-	mavlink_distance_sensor_t msg;
-	mavlink_msg_distance_sensor_decode(&message, &msg);
-
-	bool from_autopilot = message.sysid == _settings.sysid;
-
-	if (from_autopilot) {
-		_rangefinder_distance_cm.store(msg.current_distance);
-	}
-}
-
 void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 {
 	mavlink_param_request_list_t msg;
@@ -153,12 +149,14 @@ void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 
 	LOG(GREEN_TEXT "Sending parameters to GCS" NORMAL_TEXT);
 
-	// size_t count = 0;
-	// auto params = params::parameters();
+	size_t count = 0;
 
-	// for (auto& [name, value] : params) {
-	// 	send_param_value(name, value, count++, params.size());
-	// }
+	// Param request_list callback
+	std::vector<MavlinkParameter> mavlink_parameters = _mav_param_request_list_cb();
+
+	for (auto& p : mavlink_parameters) {
+		send_param_value(p);
+	}
 }
 
 void Mavlink::handle_param_set(const mavlink_message_t& message)
@@ -178,24 +176,28 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 		length = 16;
 	}
 
-	std::string name = std::string(msg.param_id, length);
-	float value = msg.param_value;
+	MavlinkParameter param = {
+		.name = std::string(msg.param_id, length),
+		.float_value = msg.param_value,
+		.type = msg.param_type,
+	};
+	// Param set callback -- it will modify 'param' and set the index on success
+	bool success = _mav_param_set_cb(&param);
 
-	// bool success = params::set_parameter(name, value);
-
-	// if (success) {
-	// 	auto params = params::parameters();
-	// 	send_param_value(name, value, std::distance(params.begin(), params.find(name)), params.size());
-	// }
+	if (success) {
+		// auto params = params::->parameters();
+		send_param_value(param);
+	}
 }
 
-void Mavlink::send_param_value(std::string name, float value, uint16_t index, uint16_t total_count)
+void Mavlink::send_param_value(const MavlinkParameter& param)
 {
 	mavlink_param_value_t pv = {};
-	pv.param_count = total_count;
-	pv.param_index = index;
-	pv.param_value = value;
-	pv.param_type = MAV_PARAM_TYPE_REAL32;
+	sprintf(pv.param_id, "%s", param.name.c_str());
+	pv.param_value = param.float_value;
+	pv.param_index = param.index;
+	pv.param_count = param.total_count;
+	pv.param_type = param.type;
 
 	mavlink_message_t message;
 	mavlink_msg_param_value_encode(_settings.sysid, _settings.compid, &message, &pv);
