@@ -8,9 +8,7 @@ namespace mavlink
 
 Mavlink::Mavlink(const ConfigurationSettings& settings)
 	: _settings(settings)
-{
-	setup_subscriptions();
-}
+{}
 
 Mavlink::~Mavlink()
 {
@@ -19,6 +17,9 @@ Mavlink::~Mavlink()
 
 void Mavlink::start()
 {
+	// TODO: move to user library
+	subscribe_to_message(MAVLINK_MSG_ID_COMMAND_LONG, [this](const mavlink_message_t& message) { handle_command_long(message); });
+
 	if (_settings.connection_url.find("serial:") != std::string::npos) {
 		// TODO: create serial
 
@@ -96,12 +97,6 @@ void Mavlink::enable_parameters(std::function<std::vector<MavlinkParameter>(void
 	subscribe_to_message(MAVLINK_MSG_ID_PARAM_SET, 			[this](const mavlink_message_t& message) { handle_param_set(message); });
 }
 
-void Mavlink::setup_subscriptions()
-{
-	subscribe_to_message(MAVLINK_MSG_ID_COMMAND_LONG, 		[this](const mavlink_message_t& message) { handle_command_long(message); });
-
-}
-
 void Mavlink::handle_command_long(const mavlink_message_t& message)
 {
 	mavlink_command_long_t msg;
@@ -173,7 +168,6 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 	bool success = _mav_param_set_cb(&param);
 
 	if (success) {
-		// auto params = params::->parameters();
 		send_param_value(param);
 	}
 }

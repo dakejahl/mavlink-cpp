@@ -66,21 +66,18 @@ public:
 
 	ConfigurationSettings settings() { return _settings; };
 
-	//-----------------------------------------------------------------------------
-	// Message handlers
+	void subscribe_to_message(uint16_t message_id, const MessageCallback& callback);
 	void handle_message(const mavlink_message_t& message);
 
 	//-----------------------------------------------------------------------------
 	// Message senders
 	void send_message(const mavlink_message_t& message);
 	void send_heartbeat();
-
 	void send_status_text(std::string&& message, int severity = MAV_SEVERITY_CRITICAL);
 	void send_command_ack(const MavCommand& mav_cmd, int mav_result);
 
 	//-----------------------------------------------------------------------------
 	// Helpers
-	void subscribe_to_message(uint16_t message_id, const MessageCallback& callback);
 	void enable_parameters(std::function<std::vector<MavlinkParameter>(void)> request_list_cb,
 			       std::function<bool(MavlinkParameter*)> set_cb);
 
@@ -88,9 +85,6 @@ public:
 	bool command_queue_pop(MavCommand* command) { return _command_queue.pop_front(command); };
 
 private:
-	// TESTING -- move to user code once this is a library
-	void setup_subscriptions();
-
 	//-----------------------------------------------------------------------------
 	// Message handlers
 	void handle_command_long(const mavlink_message_t& message);

@@ -129,14 +129,9 @@ void UdpConnection::receive_thread_main()
 			}
 
 			// Check if it's time to senda heartbeat. Only send heartbeats if we're still connected to an autopilot
-			if (_connected) {
-				if (_emit_heartbeat) {
-
-					uint64_t time_now = millis();
-
-					if (time_now > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
-						_parent->send_heartbeat();
-					}
+			if (_connected && _emit_heartbeat) {
+				if (millis() > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
+					_parent->send_heartbeat();
 				}
 			}
 		}
