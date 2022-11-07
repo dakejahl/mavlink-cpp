@@ -14,7 +14,7 @@ public:
 	{};
 
 	bool connected() { return _connected && !connection_timed_out(); };
-	bool connection_timed_out() { return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() > _last_heartbeat_ms + _connection_timeout_ms; };
+	bool connection_timed_out() { return millis() > _last_heartbeat_ms + _connection_timeout_ms; };
 	bool queue_message(const mavlink_message_t& message) { return _message_outbox_queue.push_back(message); };
 
 	virtual void start() = 0;
@@ -33,4 +33,5 @@ protected:
 	uint64_t _last_heartbeat_ms {};
 	uint64_t _connection_timeout_ms {};
 
+	bool _emit_heartbeat {};
 };

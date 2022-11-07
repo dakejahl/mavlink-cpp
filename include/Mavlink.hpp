@@ -35,6 +35,7 @@ struct ConfigurationSettings {
 	uint8_t compid {};
 	uint8_t mav_type {};
 	uint8_t mav_autopilot {};
+	bool emit_heartbeat {};
 };
 
 struct MavlinkParameter {
@@ -63,6 +64,12 @@ public:
 	uint8_t sysid() const { return _settings.sysid; };
 	uint8_t compid() const { return _settings.compid; };
 
+	ConfigurationSettings settings() { return _settings; };
+
+	//-----------------------------------------------------------------------------
+	// Message handlers
+	void handle_message(const mavlink_message_t& message);
+
 	//-----------------------------------------------------------------------------
 	// Message senders
 	void send_message(const mavlink_message_t& message);
@@ -86,7 +93,6 @@ private:
 
 	//-----------------------------------------------------------------------------
 	// Message handlers
-	void handle_message(const mavlink_message_t& message);
 	void handle_command_long(const mavlink_message_t& message);
 	void handle_param_request_list(const mavlink_message_t& message);
 	void handle_param_set(const mavlink_message_t& message);

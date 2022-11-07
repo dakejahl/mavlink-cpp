@@ -1,5 +1,6 @@
 #include "UdpConnection.hpp"
 #include "MessageParser.hpp"
+#include "Mavlink.hpp"
 
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -10,11 +11,19 @@
 namespace mavlink
 {
 
-UdpConnection::UdpConnection(std::string conn, std::function<void(const mavlink_message_t& message)> message_callback)
+static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
+
+UdpConnection::UdpConnection(Mavlink* parent)
 	: Connection(UDP_CONNECTION_TIMEOUT_MS)
-	, _message_handler(message_callback)
+	, _parent(parent)
 {
+	ConfigurationSettings settings = _parent->settings();
+
 	std::string udp = "udp:";
+	std::string conn = settings.connection_url;
+
+	_emit_heartbeat = settings.emit_heartbeat;
+
 	conn.erase(conn.find(udp), udp.length());
 
 	size_t index = conn.find(':');
@@ -118,6 +127,18 @@ void UdpConnection::receive_thread_main()
 				LOG(RED_TEXT "Connection timed out" NORMAL_TEXT);
 				_connected = false;
 			}
+
+			// Check if it's time to senda heartbeat. Only send heartbeats if we're still connected to an autopilot
+			if (_connected) {
+				if (_emit_heartbeat) {
+
+					uint64_t time_now = millis();
+
+					if (time_now > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
+						_parent->send_heartbeat();
+					}
+				}
+			}
 		}
 	}
 }
@@ -157,12 +178,11 @@ void UdpConnection::receive()
 				LOG(GREEN_TEXT "Connected to autopilot on: %s:%d (with sysid: %d)" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid);
 			}
 
-			_last_heartbeat_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-					     (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+			_last_heartbeat_ms = millis();
 		}
 
 		// Call the message handler callback
-		_message_handler(message);
+		_parent->handle_message(message);
 	}
 }
 

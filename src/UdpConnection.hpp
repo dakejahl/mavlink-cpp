@@ -17,10 +17,12 @@ namespace mavlink
 
 static constexpr uint64_t UDP_CONNECTION_TIMEOUT_MS = 2000;
 
+class Mavlink;
+
 class UdpConnection : public Connection
 {
 public:
-	UdpConnection(std::string conn_str, std::function<void(const mavlink_message_t& message)> message_callback);
+	UdpConnection(Mavlink* parent);
 
 	void start() override;
 	void stop() override;
@@ -57,7 +59,8 @@ private:
 	char* _datagram {};
 	unsigned _datagram_len {};
 
-	std::function<void(const mavlink_message_t& message)> _message_handler;
+	// std::function<void(const mavlink_message_t& message)> _message_handler;
+	Mavlink* _parent {};
 };
 
 } // end namespace mavlink

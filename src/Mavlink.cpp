@@ -6,8 +6,6 @@
 namespace mavlink
 {
 
-static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
-
 Mavlink::Mavlink(const ConfigurationSettings& settings)
 	: _settings(settings)
 {
@@ -27,7 +25,7 @@ void Mavlink::start()
 	} else if (_settings.connection_url.find("udp:") != std::string::npos) {
 
 		// We provide the connection class with a message handler callback function
-		_connection = std::make_unique<UdpConnection>(_settings.connection_url, [this](const mavlink_message_t& message) { handle_message(message); });
+		_connection = std::make_unique<UdpConnection>(this);
 
 		// Spawns thread -- all connection handling happens in that thread context
 		_connection->start();
@@ -75,25 +73,15 @@ void Mavlink::send_message(const mavlink_message_t& message)
 
 void Mavlink::send_heartbeat()
 {
-	static uint64_t last_heartbeat_ms = 0;
+	mavlink_heartbeat_t hb = {};
+	hb.type = _settings.mav_type;
+	hb.autopilot = _settings.mav_autopilot;
+	hb.system_status = MAV_STATE_ACTIVE; // TODO: report failsafes like this? Or something?
 
-	uint64_t time_now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::
-			    now().time_since_epoch()).count();
+	mavlink_message_t message;
+	mavlink_msg_heartbeat_encode(_settings.sysid, _settings.compid, &message, &hb);
 
-	if (time_now > last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
-
-		mavlink_heartbeat_t hb = {};
-		hb.type = _settings.mav_type;
-		hb.autopilot = _settings.mav_autopilot;
-		hb.system_status = MAV_STATE_ACTIVE; // TODO: report failsafes like this? Or something?
-
-		mavlink_message_t message;
-		mavlink_msg_heartbeat_encode(_settings.sysid, _settings.compid, &message, &hb);
-
-		send_message(message);
-
-		last_heartbeat_ms = time_now;
-	}
+	send_message(message);
 }
 
 // TODO: EVERYTHING BELOW THIS GOES INTO USER FILE FOR LIBRARY
