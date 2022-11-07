@@ -82,12 +82,10 @@ public:
 			       std::function<bool(MavlinkParameter*)> set_cb);
 
 	bool connected() const { return _connection->connected(); };
-	bool command_queue_pop(MavCommand* command) { return _command_queue.pop_front(command); };
 
 private:
 	//-----------------------------------------------------------------------------
 	// Message handlers
-	void handle_command_long(const mavlink_message_t& message);
 	void handle_param_request_list(const mavlink_message_t& message);
 	void handle_param_set(const mavlink_message_t& message);
 	//-----------------------------------------------------------------------------
@@ -98,8 +96,6 @@ private:
 	ConfigurationSettings _settings {};
 
 	std::unique_ptr<Connection> _connection {};
-
-	ThreadSafeQueue<MavCommand> _command_queue {10};
 
 	// Mavlink parameter callbacks
 	std::function<std::vector<MavlinkParameter>(void)> _mav_param_request_list_cb;
