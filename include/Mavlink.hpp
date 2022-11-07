@@ -74,7 +74,7 @@ public:
 	void send_message(const mavlink_message_t& message);
 	void send_heartbeat();
 	void send_status_text(std::string&& message, int severity = MAV_SEVERITY_CRITICAL);
-	void send_command_ack(const MavCommand& mav_cmd, int mav_result);
+	void send_command_ack(const MavCommand& mav_cmd, MAV_RESULT mav_result);
 
 	//-----------------------------------------------------------------------------
 	// Helpers

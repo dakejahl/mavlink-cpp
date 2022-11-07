@@ -162,7 +162,7 @@ void Mavlink::send_param_value(const MavlinkParameter& param)
 	send_message(message);
 }
 
-void Mavlink::send_command_ack(const MavCommand& mav_cmd, int result)
+void Mavlink::send_command_ack(const MavCommand& mav_cmd, MAV_RESULT result)
 {
 	mavlink_command_ack_t ack = {};
 	ack.command = mav_cmd.command;
