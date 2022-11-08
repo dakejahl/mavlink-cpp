@@ -10,7 +10,6 @@ public:
 		, _length(length)
 	{}
 
-
 	// Parses a single mavlink message from the data buffer.
 	// Note that one datagram can contain multiple mavlink messages.
 	// It is OK if a message is fragmented because mavlink_parse_char places bytes into an internal buffer.

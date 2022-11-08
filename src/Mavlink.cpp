@@ -139,7 +139,7 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 		.float_value = msg.param_value,
 		.type = msg.param_type,
 	};
-	// Param set callback -- it will modify 'param' and set the index on success
+	// Param set callback -- it will modify 'param' to set the index on success
 	bool success = _mav_param_set_cb(&param);
 
 	if (success) {

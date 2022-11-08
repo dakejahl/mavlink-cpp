@@ -99,10 +99,10 @@ void UdpConnection::send_thread_main()
 	while (!_should_exit) {
 		if (_initialized && _connected) {
 
-			mavlink_message_t message;
+			std::optional<mavlink_message_t> message = _message_outbox_queue.pop_front(/* blocking */ true);
 
-			if (_message_outbox_queue.pop_front(&message, /* blocking */ true)) {
-				if (!send_message(message)) {
+			if (message) {
+				if (!send_message(message.value())) {
 					LOG(RED_TEXT "Send message failed!" NORMAL_TEXT);
 				}
 			}

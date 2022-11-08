@@ -3,6 +3,7 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include <optional>
 
 template<class T>
 class ThreadSafeQueue
@@ -29,7 +30,7 @@ public:
 		return false;
 	};
 
-	bool pop_front(T* item, bool blocking = false)
+	std::optional<T> pop_front(bool blocking = false)
 	{
 		std::unique_lock<std::mutex> lock(_mutex);
 
@@ -40,12 +41,12 @@ public:
 		}
 
 		if (_queue.size()) {
-			*item = _queue.front();
+			auto item = _queue.front();
 			_queue.pop_front();
-			return true;
+			return item;
 		}
 
-		return false;
+		return std::nullopt;
 	};
 
 private:
