@@ -38,7 +38,7 @@ struct ConfigurationSettings {
 	bool emit_heartbeat {};
 };
 
-struct MavlinkParameter {
+struct Parameter {
 
 	std::string name {};
 
@@ -78,8 +78,8 @@ public:
 
 	//-----------------------------------------------------------------------------
 	// Helpers
-	void enable_parameters(std::function<std::vector<MavlinkParameter>(void)> request_list_cb,
-			       std::function<bool(MavlinkParameter*)> set_cb);
+	void enable_parameters(std::function<std::vector<Parameter>(void)> request_list_cb,
+			       std::function<bool(Parameter*)> set_cb);
 
 	bool connected() const { return _connection->connected(); };
 
@@ -90,7 +90,7 @@ private:
 	void handle_param_set(const mavlink_message_t& message);
 	//-----------------------------------------------------------------------------
 	// Message senders
-	void send_param_value(const MavlinkParameter& param);
+	void send_param_value(const Parameter& param);
 
 private:
 	ConfigurationSettings _settings {};
@@ -98,8 +98,8 @@ private:
 	std::unique_ptr<Connection> _connection {};
 
 	// Mavlink parameter callbacks
-	std::function<std::vector<MavlinkParameter>(void)> _mav_param_request_list_cb;
-	std::function<bool(MavlinkParameter* param)> _mav_param_set_cb;
+	std::function<std::vector<Parameter>(void)> _mav_param_request_list_cb;
+	std::function<bool(Parameter* param)> _mav_param_set_cb;
 
 	std::mutex _subscriptions_mutex {};
 	std::unordered_map<uint16_t, MessageCallback> _message_subscriptions {}; // Mavlink message ID --> callback(mavlink_message_t)

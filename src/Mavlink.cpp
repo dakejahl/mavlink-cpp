@@ -81,8 +81,8 @@ void Mavlink::send_heartbeat()
 	send_message(message);
 }
 
-void Mavlink::enable_parameters(std::function<std::vector<MavlinkParameter>(void)> request_list_cb,
-				std::function<bool(MavlinkParameter*)> set_cb)
+void Mavlink::enable_parameters(std::function<std::vector<Parameter>(void)> request_list_cb,
+				std::function<bool(Parameter*)> set_cb)
 {
 	_mav_param_request_list_cb = std::move(request_list_cb);
 	_mav_param_set_cb = std::move(set_cb);
@@ -110,7 +110,7 @@ void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 	size_t count = 0;
 
 	// Param request_list callback
-	std::vector<MavlinkParameter> mavlink_parameters = _mav_param_request_list_cb();
+	std::vector<Parameter> mavlink_parameters = _mav_param_request_list_cb();
 
 	for (auto& p : mavlink_parameters) {
 		send_param_value(p);
@@ -134,7 +134,7 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 		length = 16;
 	}
 
-	MavlinkParameter param = {
+	Parameter param = {
 		.name = std::string(msg.param_id, length),
 		.float_value = msg.param_value,
 		.type = msg.param_type,
@@ -147,7 +147,7 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 	}
 }
 
-void Mavlink::send_param_value(const MavlinkParameter& param)
+void Mavlink::send_param_value(const Parameter& param)
 {
 	mavlink_param_value_t pv = {};
 	sprintf(pv.param_id, "%s", param.name.c_str());
