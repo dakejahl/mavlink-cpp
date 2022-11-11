@@ -45,14 +45,14 @@ void UdpConnection::stop()
 {
 	_should_exit = true;
 
-	// Clear outbox and wake up sending thread
-	_message_outbox_queue.clear();
-	_send_thread->join();
-
 	// Close socket and wait for receiving thread
 	shutdown(_socket_fd, SHUT_RDWR);
 	close(_socket_fd);
 	_recv_thread->join();
+
+	// Clear outbox and wake up sending thread
+	_message_outbox_queue.clear();
+	_send_thread->join();
 }
 
 void UdpConnection::setup_port()
@@ -131,14 +131,14 @@ void UdpConnection::receive_thread_main()
 			setup_port();
 
 		} else {
-			receive();
+			receive(); // Note: this blocks when not receiving any data
 
 			if (_connected && connection_timed_out()) {
 				LOG(RED_TEXT "Connection timed out" NORMAL_TEXT);
 				_connected = false;
 			}
 
-			// Check if it's time to senda heartbeat. Only send heartbeats if we're still connected to an autopilot
+			// Check if it's time to send a heartbeat. Only send heartbeats if we're still connected to an autopilot
 			if (_connected && _emit_heartbeat) {
 				if (millis() > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
 					_parent->send_heartbeat();
@@ -156,6 +156,8 @@ void UdpConnection::receive()
 	socklen_t src_addr_len = sizeof(src_addr);
 
 	// NOTE: This function blocks -- thus during destruction we call shutdown/close on the socket before joining the thread
+	// TODO: this isn't actually returning if there's no data coming in
+	// We need to find a way to signal to the thread to unblock from recvfrom
 	const ssize_t recv_len = recvfrom(
 					 _socket_fd,
 					 _receive_buffer,

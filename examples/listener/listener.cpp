@@ -32,9 +32,8 @@ int main(int argc, const char** argv)
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
 	LOG("Subscribing to messages");
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_DISTANCE_SENSOR, [](auto message) 	{ LOG("MAVLINK_MSG_ID_DISTANCE_SENSOR"); });
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT"); });
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE"); });
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid); });
+	// mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE -- %u/%u", message.sysid, message.compid); });
 
 	mavlink->start();
 

@@ -5,6 +5,8 @@
 #include <condition_variable>
 #include <optional>
 
+#include <helpers.hpp>
+
 template<class T>
 class ThreadSafeQueue
 {
@@ -34,10 +36,8 @@ public:
 	{
 		std::unique_lock<std::mutex> lock(_mutex);
 
-		if (blocking) {
-			while (_queue.empty()) {
-				_cv.wait(lock);
-			}
+		if (blocking && _queue.empty()) {
+			_cv.wait(lock);
 		}
 
 		if (_queue.size()) {
@@ -51,9 +51,9 @@ public:
 
 	void clear()
 	{
-		std::unique_lock<std::mutex> lock(_mutex);
+		std::scoped_lock<std::mutex> lock(_mutex);
 		_queue.clear();
-		_cv.notify_one();
+		_cv.notify_all();
 	};
 
 private:
