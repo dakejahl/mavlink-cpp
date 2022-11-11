@@ -1,3 +1,4 @@
+
 [submodule "lib/mavlink"]
 	path = lib/mavlink
-	url = git@github.com:mavlink/mavlink.git
+	url = https://github.com/mavlink/c_library_v2.git

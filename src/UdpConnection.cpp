@@ -10,9 +10,6 @@
 
 namespace mavlink
 {
-
-static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
-
 UdpConnection::UdpConnection(Mavlink* parent)
 	: Connection(UDP_CONNECTION_TIMEOUT_MS)
 	, _parent(parent)
@@ -32,12 +29,18 @@ UdpConnection::UdpConnection(Mavlink* parent)
 	_our_port = std::stoi(conn);
 }
 
-void UdpConnection::start()
+ConnectionResult UdpConnection::start()
 {
-	setup_port();
+	ConnectionResult ret = setup_port();
+
+	if (ret != ConnectionResult::Success) {
+		return ret;
+	}
 
 	_recv_thread = std::make_unique<std::thread>(&UdpConnection::receive_thread_main, this);
 	_send_thread = std::make_unique<std::thread>(&UdpConnection::send_thread_main, this);
+
+	return ConnectionResult::Success;
 }
 
 void UdpConnection::stop()
@@ -51,14 +54,14 @@ void UdpConnection::stop()
 	close(_socket_fd);
 }
 
-void UdpConnection::setup_port()
+ConnectionResult UdpConnection::setup_port()
 {
 	LOG("Setting up port");
 	_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if (_socket_fd < 0) {
 		LOG("socket error");
-		return;
+		return ConnectionResult::SocketError;
 	}
 
 	struct sockaddr_in addr = {};
@@ -71,10 +74,12 @@ void UdpConnection::setup_port()
 
 	if (bind(_socket_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
 		LOG("bind error");
-		return;
+		return ConnectionResult::BindError;
 	}
 
 	_initialized = true;
+
+	return ConnectionResult::Success;
 }
 
 bool UdpConnection::send_message(const mavlink_message_t& message)
@@ -115,6 +120,8 @@ void UdpConnection::send_thread_main()
 
 void UdpConnection::receive_thread_main()
 {
+	LOG("receive_thread_main");
+
 	while (!_should_exit) {
 		if (!_initialized) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -129,8 +136,11 @@ void UdpConnection::receive_thread_main()
 			}
 
 			// Check if it's time to senda heartbeat. Only send heartbeats if we're still connected to an autopilot
+
 			if (_connected && _emit_heartbeat) {
-				if (millis() > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
+				if (millis() > _last_sent_heartbeat_ms + Connection::HEARTBEAT_INTERVAL_MS) {
+					LOG("Sending heartbeat");
+					_last_sent_heartbeat_ms = millis();
 					_parent->send_heartbeat();
 				}
 			}
@@ -173,7 +183,7 @@ void UdpConnection::receive()
 				LOG(GREEN_TEXT "Connected to autopilot on: %s:%d (with sysid: %d)" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid);
 			}
 
-			_last_heartbeat_ms = millis();
+			_last_received_heartbeat_ms = millis();
 		}
 
 		// Call the message handler callback

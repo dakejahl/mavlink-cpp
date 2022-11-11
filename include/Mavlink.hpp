@@ -58,7 +58,7 @@ public:
 	Mavlink(const ConfigurationSettings& settings);
 	~Mavlink();
 
-	void start();
+	ConnectionResult start();
 	void stop();
 
 	uint8_t sysid() const { return _settings.sysid; };

@@ -2,7 +2,11 @@
 
 #include <mavlink.h>
 #include <ThreadSafeQueue.hpp>
+#include <ConnectionResult.hpp>
 #include <helpers.hpp>
+
+namespace mavlink
+{
 
 class Connection
 {
@@ -14,12 +18,14 @@ public:
 	{};
 
 	bool connected() { return _connected && !connection_timed_out(); };
-	bool connection_timed_out() { return millis() > _last_heartbeat_ms + _connection_timeout_ms; };
+	bool connection_timed_out() { return millis() > _last_received_heartbeat_ms + _connection_timeout_ms; };
 	bool queue_message(const mavlink_message_t& message) { return _message_outbox_queue.push_back(message); };
 
-	virtual void start() = 0;
+	virtual ConnectionResult start() = 0;
 	virtual void stop() = 0;
 	virtual bool send_message(const mavlink_message_t& message) = 0;
+
+	static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
 
 protected:
 	ThreadSafeQueue<mavlink_message_t> _message_outbox_queue {100};
@@ -30,8 +36,11 @@ protected:
 	bool _initialized {};
 	bool _connected {};
 
-	uint64_t _last_heartbeat_ms {};
+	uint64_t _last_received_heartbeat_ms {};
+	uint64_t _last_sent_heartbeat_ms {};
 	uint64_t _connection_timeout_ms {};
 
 	bool _emit_heartbeat {};
 };
+
+}

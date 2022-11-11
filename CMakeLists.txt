@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_INSTALL_PREFIX /usr/local)
 
 set(namespace "mavlinkcpp")
 
@@ -25,6 +26,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Mavlink.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UdpConnection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ConnectionResult.cpp
 )
 
 execute_process(COMMAND astyle --quiet --options=astylerc
@@ -32,29 +34,10 @@ execute_process(COMMAND astyle --quiet --options=astylerc
     ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h,*.hpp
 )
 
-##### Build mavlink from source
-set(MAVLINK_DIALECT "development") # standard, development, etc
-set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
-set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
-
-add_custom_target(mavlink_c_generate
-        COMMAND ${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
-            --lang C --wire-protocol 2.0
-            #--no-validate
-            #--strict-units
-            --output ${MAVLINK_LIBRARY_DIR}
-            ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml
+target_include_directories("mavlink-cpp"
+    PRIVATE
+    lib/mavlink/common
 )
-
-add_library(mavlink_c INTERFACE)
-add_dependencies(mavlink_c mavlink_c_generate)
-target_sources(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h)
-set_source_files_properties(${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h PROPERTIES GENERATED true)
-target_include_directories(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR} ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT})
-target_compile_options(mavlink_c INTERFACE -Wno-address-of-packed-member -Wno-cast-align)
-
-add_dependencies(${PROJECT_NAME} mavlink_c)
-
 
 ##########################################################
 # The below is taken from:
@@ -101,6 +84,10 @@ endif()
 # without it public headers won't get installed
 set(public_headers
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/Connection.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/ConnectionResult.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/ThreadSafeQueue.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/helpers.hpp
 )
 # note that ${public_headers} has to be in quotes
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
