@@ -45,11 +45,14 @@ void UdpConnection::stop()
 {
 	_should_exit = true;
 
-	_recv_thread->join();
+	// Clear outbox and wake up sending thread
+	_message_outbox_queue.clear();
 	_send_thread->join();
 
+	// Close socket and wait for receiving thread
 	shutdown(_socket_fd, SHUT_RDWR);
 	close(_socket_fd);
+	_recv_thread->join();
 }
 
 void UdpConnection::setup_port()
@@ -114,6 +117,8 @@ void UdpConnection::send_thread_main()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
+
+	LOG("[UdpConnection] Exiting send thread");
 }
 
 void UdpConnection::receive_thread_main()
@@ -141,6 +146,8 @@ void UdpConnection::receive_thread_main()
 			}
 		}
 	}
+
+	LOG("[UdpConnection] Exiting receive thread");
 }
 
 void UdpConnection::receive()
@@ -148,6 +155,7 @@ void UdpConnection::receive()
 	struct sockaddr_in src_addr = {};
 	socklen_t src_addr_len = sizeof(src_addr);
 
+	// NOTE: This function blocks -- thus during destruction we call shutdown/close on the socket before joining the thread
 	const ssize_t recv_len = recvfrom(
 					 _socket_fd,
 					 _receive_buffer,

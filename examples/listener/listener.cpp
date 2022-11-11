@@ -36,6 +36,8 @@ int main(int argc, const char** argv)
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT"); });
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE"); });
 
+	mavlink->start();
+
 	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)
 	while (!mavlink->connected() && !_should_exit) {
 		LOG("Waiting for connection");

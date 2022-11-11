@@ -49,6 +49,13 @@ public:
 		return std::nullopt;
 	};
 
+	void clear()
+	{
+		std::unique_lock<std::mutex> lock(_mutex);
+		_queue.clear();
+		_cv.notify_one();
+	};
+
 private:
 	std::deque<T> _queue {};
 	std::mutex _mutex {};
