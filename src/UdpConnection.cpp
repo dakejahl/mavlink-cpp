@@ -57,7 +57,7 @@ void UdpConnection::stop()
 
 void UdpConnection::setup_port()
 {
-	LOG("Setting up port");
+	LOG("Initializing UDP connection");
 	_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if (_socket_fd < 0) {
