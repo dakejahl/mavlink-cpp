@@ -81,7 +81,7 @@ public:
 	void enable_parameters(std::function<std::vector<Parameter>(void)> request_list_cb,
 			       std::function<bool(Parameter*)> set_cb);
 
-	bool connected() const { return _connection->connected(); };
+	bool connected() const { return _connection.get() && _connection->connected(); };
 
 private:
 	//-----------------------------------------------------------------------------

@@ -13,6 +13,7 @@ namespace mavlink
 
 static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
 
+// TODO: overload constructor to pass in connection target -- target.sysid and target.compid (instead of 1/1 for autopilot)
 UdpConnection::UdpConnection(Mavlink* parent)
 	: Connection(UDP_CONNECTION_TIMEOUT_MS)
 	, _parent(parent)
@@ -44,11 +45,14 @@ void UdpConnection::stop()
 {
 	_should_exit = true;
 
-	_recv_thread->join();
-	_send_thread->join();
-
+	// Close socket and wait for receiving thread
 	shutdown(_socket_fd, SHUT_RDWR);
 	close(_socket_fd);
+	_recv_thread->join();
+
+	// Clear outbox and wake up sending thread
+	_message_outbox_queue.clear();
+	_send_thread->join();
 }
 
 void UdpConnection::setup_port()
@@ -96,6 +100,8 @@ bool UdpConnection::send_message(const mavlink_message_t& message)
 
 void UdpConnection::send_thread_main()
 {
+	LOG("[UdpConnection] Starting sending thread");
+
 	while (!_should_exit) {
 		if (_initialized && _connected) {
 
@@ -111,24 +117,28 @@ void UdpConnection::send_thread_main()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
+
+	LOG("[UdpConnection] Exiting send thread");
 }
 
 void UdpConnection::receive_thread_main()
 {
+	LOG("[UdpConnection] Starting receive thread");
+
 	while (!_should_exit) {
 		if (!_initialized) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 			setup_port();
 
 		} else {
-			receive();
+			receive(); // Note: this blocks when not receiving any data
 
 			if (_connected && connection_timed_out()) {
 				LOG(RED_TEXT "Connection timed out" NORMAL_TEXT);
 				_connected = false;
 			}
 
-			// Check if it's time to senda heartbeat. Only send heartbeats if we're still connected to an autopilot
+			// Check if it's time to send a heartbeat. Only send heartbeats if we're still connected to an autopilot
 			if (_connected && _emit_heartbeat) {
 				if (millis() > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
 					_parent->send_heartbeat();
@@ -136,6 +146,8 @@ void UdpConnection::receive_thread_main()
 			}
 		}
 	}
+
+	LOG("[UdpConnection] Exiting receive thread");
 }
 
 void UdpConnection::receive()
@@ -143,6 +155,9 @@ void UdpConnection::receive()
 	struct sockaddr_in src_addr = {};
 	socklen_t src_addr_len = sizeof(src_addr);
 
+	// NOTE: This function blocks -- thus during destruction we call shutdown/close on the socket before joining the thread
+	// TODO: this isn't actually returning if there's no data coming in
+	// We need to find a way to signal to the thread to unblock from recvfrom
 	const ssize_t recv_len = recvfrom(
 					 _socket_fd,
 					 _receive_buffer,
