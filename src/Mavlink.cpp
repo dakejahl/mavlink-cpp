@@ -61,6 +61,10 @@ void Mavlink::subscribe_to_message(uint16_t message_id, const MessageCallback& c
 
 void Mavlink::send_message(const mavlink_message_t& message)
 {
+	if (!_connection.get()) {
+		return;
+	}
+
 	if (_connection->connected()) {
 		if (!_connection->queue_message(message)) {
 			LOG(RED_TEXT "Queueing message failed! Message queue full" NORMAL_TEXT);
@@ -70,10 +74,11 @@ void Mavlink::send_message(const mavlink_message_t& message)
 
 void Mavlink::send_heartbeat()
 {
-	mavlink_heartbeat_t hb = {};
-	hb.type = _settings.mav_type;
-	hb.autopilot = _settings.mav_autopilot;
-	hb.system_status = MAV_STATE_ACTIVE; // TODO: report failsafes like this? Or something?
+	mavlink_heartbeat_t hb = {
+		.type = 			_settings.mav_type,
+		.autopilot = 		_settings.mav_autopilot,
+		.system_status = 	MAV_STATE_ACTIVE  // TODO: report failsafes like this? Or something?
+	};
 
 	mavlink_message_t message;
 	mavlink_msg_heartbeat_encode(_settings.sysid, _settings.compid, &message, &hb);
@@ -149,12 +154,14 @@ void Mavlink::handle_param_set(const mavlink_message_t& message)
 
 void Mavlink::send_param_value(const Parameter& param)
 {
-	mavlink_param_value_t pv = {};
-	sprintf(pv.param_id, "%s", param.name.c_str());
-	pv.param_value = param.float_value;
-	pv.param_index = param.index;
-	pv.param_count = param.total_count;
-	pv.param_type = param.type;
+	mavlink_param_value_t pv = {
+		.param_value = param.float_value,
+		.param_count = param.total_count,
+		.param_index = param.index,
+		.param_type = param.type
+	};
+
+	snprintf(pv.param_id,  sizeof(pv.param_id), "%s", param.name.c_str());
 
 	mavlink_message_t message;
 	mavlink_msg_param_value_encode(_settings.sysid, _settings.compid, &message, &pv);
@@ -164,11 +171,12 @@ void Mavlink::send_param_value(const Parameter& param)
 
 void Mavlink::send_command_ack(const MavCommand& mav_cmd, MAV_RESULT result)
 {
-	mavlink_command_ack_t ack = {};
-	ack.command = mav_cmd.command;
-	ack.result = result;
-	ack.target_system = mav_cmd.sender_sysid;
-	ack.target_component = mav_cmd.sender_compid;
+	mavlink_command_ack_t ack = {
+		.command = mav_cmd.command,
+		.result = result,
+		.target_system = mav_cmd.sender_sysid,
+		.target_component = mav_cmd.sender_compid
+	};
 
 	mavlink_message_t message;
 	mavlink_msg_command_ack_encode(_settings.sysid, _settings.compid, &message, &ack);
@@ -176,18 +184,18 @@ void Mavlink::send_command_ack(const MavCommand& mav_cmd, MAV_RESULT result)
 	send_message(message);
 }
 
-void Mavlink::send_status_text(std::string&& text, int severity)
+void Mavlink::send_status_text(std::string&& text, MAV_SEVERITY severity)
 {
-	mavlink_statustext_t status = {};
+	mavlink_statustext_t status = {
+		.severity = severity
+	};
 
-	status.severity = severity;
-	LOG("statustext: %s", text.c_str());
-	memcpy(status.text,  text.c_str(), text.size() > 49 ? 49 : text.size());
-	status.text[49] = '\0'; // Add null terminator
+	snprintf(status.text, sizeof(status.text), "%s", text.c_str());
 
 	mavlink_message_t message;
 	mavlink_msg_statustext_encode(_settings.sysid, _settings.compid, &message, &status);
 
+	LOG("statustext: %s", text.c_str());
 	send_message(message);
 }
 

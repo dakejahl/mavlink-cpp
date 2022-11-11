@@ -64,8 +64,6 @@ public:
 	uint8_t sysid() const { return _settings.sysid; };
 	uint8_t compid() const { return _settings.compid; };
 
-	ConfigurationSettings settings() { return _settings; };
-
 	void subscribe_to_message(uint16_t message_id, const MessageCallback& callback);
 	void handle_message(const mavlink_message_t& message);
 
@@ -73,7 +71,7 @@ public:
 	// Message senders
 	void send_message(const mavlink_message_t& message);
 	void send_heartbeat();
-	void send_status_text(std::string&& message, int severity = MAV_SEVERITY_CRITICAL);
+	void send_status_text(std::string&& message, MAV_SEVERITY severity = MAV_SEVERITY_CRITICAL);
 	void send_command_ack(const MavCommand& mav_cmd, MAV_RESULT mav_result);
 
 	//-----------------------------------------------------------------------------
@@ -84,6 +82,8 @@ public:
 	bool connected() const { return _connection.get() && _connection->connected(); };
 
 private:
+	ConfigurationSettings settings() { return _settings; };
+
 	//-----------------------------------------------------------------------------
 	// Message handlers
 	void handle_param_request_list(const mavlink_message_t& message);
@@ -103,6 +103,8 @@ private:
 
 	std::mutex _subscriptions_mutex {};
 	std::unordered_map<uint16_t, MessageCallback> _message_subscriptions {}; // Mavlink message ID --> callback(mavlink_message_t)
+
+	friend class UdpConnection;
 };
 
 } // end namespace mavlink

@@ -28,25 +28,24 @@ int main(int argc, const char** argv)
 		.emit_heartbeat = true
 	};
 
-	LOG("Creating mavlink interface");
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
-	LOG("Subscribing to messages");
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid); });
-	// mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE -- %u/%u", message.sysid, message.compid); });
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message){
+		LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid);
+	});
 
 	mavlink->start();
 
+	LOG("Waiting for connection...");
 	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)
 	while (!mavlink->connected() && !_should_exit) {
-		LOG("Waiting for connection");
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	// Main loop
 	while (!_should_exit) {
 		// Do nothing -- message subscription callbacks are asynchronous and run in the connection receiver thread
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	}
 
