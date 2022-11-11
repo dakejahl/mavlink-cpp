@@ -7,7 +7,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <Connection.hpp>
 #include <ThreadSafeQueue.hpp>
 
 #include <mavlink.h>
@@ -52,6 +51,8 @@ struct Parameter {
 	uint8_t type {}; // MAV_PARAM_TYPE
 };
 
+class Connection;
+
 class Mavlink
 {
 public:
@@ -67,6 +68,8 @@ public:
 	void subscribe_to_message(uint16_t message_id, const MessageCallback& callback);
 	void handle_message(const mavlink_message_t& message);
 
+	bool connected();
+
 	//-----------------------------------------------------------------------------
 	// Message senders
 	void send_message(const mavlink_message_t& message);
@@ -79,7 +82,7 @@ public:
 	void enable_parameters(std::function<std::vector<Parameter>(void)> request_list_cb,
 			       std::function<bool(Parameter*)> set_cb);
 
-	bool connected() const { return _connection.get() && _connection->connected(); };
+	// bool connected() const { return _connection.get() && _connection->connected(); };
 
 private:
 	ConfigurationSettings settings() { return _settings; };

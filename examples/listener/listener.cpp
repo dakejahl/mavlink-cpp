@@ -17,8 +17,6 @@ int main(int argc, const char** argv)
 	signal(SIGTERM, signal_handler);
 	setbuf(stdout, NULL); // Disable stdout buffering
 
-	LOG("Hello mavlink");
-
 	mavlink::ConfigurationSettings mavlink_settings = {
 		.connection_url = "udp://127.0.0.1:14561",
 		.sysid = 1,

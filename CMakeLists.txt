@@ -24,9 +24,10 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME}
 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Mavlink.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Connection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UdpConnection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialConnection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Mavlink.cpp
 )
 
 execute_process(COMMAND astyle --quiet --options=astylerc
@@ -105,7 +106,6 @@ endif()
 # Set public header list, this is the list of headers to be installed
 set(public_headers
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/include/Connection.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/include/ThreadSafeQueue.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/include/helpers.hpp
 )

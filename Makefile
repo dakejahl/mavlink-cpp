@@ -1,7 +1,7 @@
 all:
 	@cmake -Bbuild -H.; cmake --build build --target install -j 12
 
-examples: all
+examples:
 	@cmake -Bbuild -H examples; cmake --build build -j 12
 
 clean:

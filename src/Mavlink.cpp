@@ -38,6 +38,11 @@ void Mavlink::stop()
 	if (_connection.get()) _connection->stop();
 }
 
+bool Mavlink::connected()
+{
+	return _connection.get() && _connection->connected();
+}
+
 void Mavlink::handle_message(const mavlink_message_t& message)
 {
 	std::scoped_lock<std::mutex> lock(_subscriptions_mutex);
