@@ -2,7 +2,6 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <iostream>
 #include <chrono>
 #include <thread>
 
@@ -18,7 +17,7 @@ int main(int argc, const char** argv)
 	signal(SIGTERM, signal_handler);
 	setbuf(stdout, NULL); // Disable stdout buffering
 
-	std::cout << "Hello mavlink" << std::endl;
+	LOG("Hello mavlink");
 
 	mavlink::ConfigurationSettings mavlink_settings = {
 		.connection_url = "udp://127.0.0.1:14561",
@@ -29,15 +28,17 @@ int main(int argc, const char** argv)
 		.emit_heartbeat = true
 	};
 
+	LOG("Creating mavlink interface");
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
+	LOG("Subscribing to messages");
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_DISTANCE_SENSOR, [](auto message) 	{ LOG("MAVLINK_MSG_ID_DISTANCE_SENSOR"); });
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT"); });
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE"); });
 
 	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)
 	while (!mavlink->connected() && !_should_exit) {
-		std::cout << "waiting for connection" << std::endl;
+		LOG("Waiting for connection");
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
@@ -53,6 +54,5 @@ int main(int argc, const char** argv)
 
 static void signal_handler(int signum)
 {
-	LOG("signal_handler!");
 	_should_exit = true;
 }

@@ -97,6 +97,8 @@ bool UdpConnection::send_message(const mavlink_message_t& message)
 
 void UdpConnection::send_thread_main()
 {
+	LOG("[UdpConnection] Starting sending thread");
+
 	while (!_should_exit) {
 		if (_initialized && _connected) {
 
@@ -116,6 +118,8 @@ void UdpConnection::send_thread_main()
 
 void UdpConnection::receive_thread_main()
 {
+	LOG("[UdpConnection] Starting receive thread");
+
 	while (!_should_exit) {
 		if (!_initialized) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
