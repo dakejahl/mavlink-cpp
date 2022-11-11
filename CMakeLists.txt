@@ -55,7 +55,6 @@ target_compile_options(mavlink_c INTERFACE -Wno-address-of-packed-member -Wno-ca
 
 add_dependencies(${PROJECT_NAME} mavlink_c)
 
-
 ##########################################################
 # The below is taken from:
 # https://decovar.dev/blog/2021/03/08/cmake-cpp-library/
@@ -68,7 +67,6 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         # where the library itself will look for its internal headers
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}
 
     PUBLIC
         # where top-level project will look for the library's public headers
@@ -76,6 +74,7 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}>
         # where external projects will look for the library's public headers
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<INSTALL_INTERFACE:build/lib/mavlink/${MAVLINK_DIALECT}>
 )
 
 # note that it is not CMAKE_INSTALL_PREFIX we are checking here
@@ -100,8 +99,16 @@ endif()
 
 # without it public headers won't get installed
 set(public_headers
+   # ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/mavlink.h
+   # ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/version.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/Connection.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/ThreadSafeQueue.hpp
 )
+
+file(GLOB mavlink_headers *.h)
+list(APPEND public_headers mavlink_headers)
+
 # note that ${public_headers} has to be in quotes
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 
@@ -111,6 +118,7 @@ include(GNUInstallDirs)
 # the variant with PUBLIC_HEADER property unfortunately does not preserve the above folder structure
 # so instead we iterate through public headers and install them "manually"
 foreach(header ${public_headers})
+    message("weiner")
     file(RELATIVE_PATH header_file_path "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}" "${header}")
     get_filename_component(header_directory_path "${header_file_path}" DIRECTORY)
     install(
