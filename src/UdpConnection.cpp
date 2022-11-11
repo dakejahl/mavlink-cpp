@@ -145,9 +145,14 @@ void UdpConnection::receive_thread_main()
 			}
 
 			// Check if it's time to send a heartbeat. Only send heartbeats if we're still connected to an autopilot
+			static uint64_t last_sent_heartbeat_ms = {};
+
 			if (_connected && _emit_heartbeat) {
-				if (millis() > _last_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
+				auto now = millis();
+
+				if (now > last_sent_heartbeat_ms + HEARTBEAT_INTERVAL_MS) {
 					_parent->send_heartbeat();
+					last_sent_heartbeat_ms = now;
 				}
 			}
 		}
@@ -191,14 +196,16 @@ void UdpConnection::receive()
 				_remote_ip = inet_ntoa(src_addr.sin_addr);
 				_remote_port = ntohs(src_addr.sin_port);
 				_connected = true;
-				LOG(GREEN_TEXT "Connected to autopilot on: %s:%d (with sysid: %d)" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid);
+				LOG(GREEN_TEXT "Connected to %s:%d -- sysid %u compid %u)" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid, message.compid);
 			}
 
 			_last_heartbeat_ms = millis();
 		}
 
-		// Call the message handler callback
-		_parent->handle_message(message);
+		// Call the message handler callback only if we're still connect to the target system
+		if (_connected) {
+			_parent->handle_message(message);
+		}
 	}
 }
 
