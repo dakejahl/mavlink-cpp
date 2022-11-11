@@ -3,13 +3,9 @@
 namespace mavlink
 {
 
-Connection::Connection(uint64_t connection_timeout_ms, uint8_t target_sysid, uint8_t target_compid)
+Connection::Connection(uint64_t connection_timeout_ms)
 	: _connection_timeout_ms(connection_timeout_ms)
-	, _target_sysid(target_sysid)
-	, _target_compid(target_compid)
-{
-
-}
+{}
 
 bool Connection::connected()
 {

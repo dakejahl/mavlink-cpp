@@ -10,7 +10,7 @@ namespace mavlink
 class Connection
 {
 public:
-	Connection(uint64_t connection_timeout_ms, uint8_t target_sysid = 1, uint8_t target_compid = 1);
+	Connection(uint64_t connection_timeout_ms);
 
 	bool connected();
 	bool connection_timed_out();
@@ -23,8 +23,8 @@ public:
 protected:
 	ThreadSafeQueue<mavlink_message_t> _message_outbox_queue {100};
 
-	uint8_t _target_sysid {};
-	uint8_t _target_compid {};
+	uint8_t _target_sysid {1};
+	uint8_t _target_compid {1};
 
 	bool _initialized {};
 	bool _connected {};

@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(listener VERSION 0.1 LANGUAGES CXX)
 
-list(APPEND CMAKE_PREFIX_PATH "../../install")
-
 find_package(mavlink-cpp CONFIG REQUIRED)
 
 add_executable(listener)

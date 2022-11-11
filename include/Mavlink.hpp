@@ -19,12 +19,12 @@ using MessageCallback = std::function<void(const mavlink_message_t&)>;
 struct MavCommand {
 	MavCommand() = default;
 	MavCommand(uint8_t sysid, uint8_t compid, uint16_t command)
-		: sender_sysid(sysid)
-		, sender_compid(compid)
+		: target_sysid(sysid)
+		, target_compid(compid)
 		, command(command)
 	{}
-	uint8_t sender_sysid {};
-	uint8_t sender_compid {};
+	uint8_t target_sysid {};
+	uint8_t target_compid {};
 	uint16_t command {};
 };
 
@@ -32,6 +32,8 @@ struct ConfigurationSettings {
 	std::string connection_url {};
 	uint8_t sysid {};
 	uint8_t compid {};
+	uint8_t target_sysid {};
+	uint8_t target_compid {};
 	uint8_t mav_type {};
 	uint8_t mav_autopilot {};
 	bool emit_heartbeat {};

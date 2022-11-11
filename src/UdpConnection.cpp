@@ -31,6 +31,12 @@ UdpConnection::UdpConnection(Mavlink* parent)
 	_our_ip = conn.substr(0, index);
 	conn.erase(0, index + 1);
 	_our_port = std::stoi(conn);
+
+	// Set the target system/component
+	if (settings.target_sysid && settings.target_compid) {
+		_target_sysid = settings.target_sysid;
+		_target_compid = settings.target_compid;
+	}
 }
 
 void UdpConnection::start()

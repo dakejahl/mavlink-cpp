@@ -179,8 +179,8 @@ void Mavlink::send_command_ack(const MavCommand& mav_cmd, MAV_RESULT result)
 	mavlink_command_ack_t ack = {
 		.command = mav_cmd.command,
 		.result = result,
-		.target_system = mav_cmd.sender_sysid,
-		.target_component = mav_cmd.sender_compid
+		.target_system = mav_cmd.target_sysid,
+		.target_component = mav_cmd.target_compid
 	};
 
 	mavlink_message_t message;

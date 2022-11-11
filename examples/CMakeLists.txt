@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(mavlinkcpp_examples)
 
+list(APPEND CMAKE_PREFIX_PATH "../../install")
+
 add_subdirectory(listener)
