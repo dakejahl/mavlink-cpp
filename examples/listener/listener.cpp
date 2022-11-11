@@ -1,8 +1,10 @@
-
 #include <unistd.h>
 #include <signal.h>
 #include <sys/time.h>
+
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include <Mavlink.hpp>
 
@@ -18,7 +20,6 @@ int main(int argc, const char** argv)
 
 	std::cout << "Hello mavlink" << std::endl;
 
-	// Intialize mavlink
 	mavlink::ConfigurationSettings mavlink_settings = {
 		.connection_url = "udp://127.0.0.1:14561",
 		.sysid = 1,
@@ -30,26 +31,28 @@ int main(int argc, const char** argv)
 
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
-	// Subscribe to mavlink DISTANCE_SENSOR
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_DISTANCE_SENSOR, [](const mavlink_message_t& message) { LOG("MAVLINK_MSG_ID_DISTANCE_SENSOR"); });
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](const mavlink_message_t& message) { LOG("MAVLINK_MSG_ID_HEARTBEAT"); });
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](const mavlink_message_t& message) { LOG("MAVLINK_MSG_ID_ATTITUDE"); });
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_DISTANCE_SENSOR, [](auto message) 	{ LOG("MAVLINK_MSG_ID_DISTANCE_SENSOR"); });
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) 		{ LOG("MAVLINK_MSG_ID_HEARTBEAT"); });
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_ATTITUDE, [](auto message) 		{ LOG("MAVLINK_MSG_ID_ATTITUDE"); });
 
-	while (!mavlink->connected()) {
+	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)
+	while (!mavlink->connected() && !_should_exit) {
 		std::cout << "waiting for connection" << std::endl;
-
-		usleep(1000000);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
-
+	// Main loop
 	while (!_should_exit) {
-		usleep(10000);
+		// Do nothing -- message subscription callbacks are asynchronous and run in the connection receiver thread
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 	}
+
+	LOG("Exiting...");
 }
 
 static void signal_handler(int signum)
 {
 	LOG("signal_handler!");
-
 	_should_exit = true;
 }

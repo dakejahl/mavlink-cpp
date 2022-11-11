@@ -13,6 +13,7 @@ namespace mavlink
 
 static constexpr uint64_t HEARTBEAT_INTERVAL_MS = 1000; // 1Hz
 
+// TODO: overload constructor to pass in connection target -- target.sysid and target.compid (instead of 1/1 for autopilot)
 UdpConnection::UdpConnection(Mavlink* parent)
 	: Connection(UDP_CONNECTION_TIMEOUT_MS)
 	, _parent(parent)
