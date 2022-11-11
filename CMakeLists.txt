@@ -37,17 +37,17 @@ set(MAVLINK_DIALECT "development") # standard, development, etc
 set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
 set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
 
-add_custom_target(mavlink_c_generate
-        COMMAND ${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
-            --lang C --wire-protocol 2.0
-            #--no-validate
-            #--strict-units
-            --output ${MAVLINK_LIBRARY_DIR}
-            ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
+        --lang C --wire-protocol 2.0
+        #--no-validate
+        #--strict-units
+        --output ${MAVLINK_LIBRARY_DIR}
+        ${MAVLINK_GIT_DIR}/message_definitions/v1.0/${MAVLINK_DIALECT}.xml
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_library(mavlink_c INTERFACE)
-add_dependencies(mavlink_c mavlink_c_generate)
 target_sources(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h)
 set_source_files_properties(${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/${MAVLINK_DIALECT}.h PROPERTIES GENERATED true)
 target_include_directories(mavlink_c INTERFACE ${MAVLINK_LIBRARY_DIR} ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT})
@@ -67,6 +67,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         # where the library itself will look for its internal headers
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 
     PUBLIC
         # where top-level project will look for the library's public headers
@@ -97,16 +98,18 @@ else()
     )
 endif()
 
-# without it public headers won't get installed
+# Set public header list, this is the list of headers to be installed
 set(public_headers
-   ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/mavlink.h
-   ${MAVLINK_LIBRARY_DIR}/${MAVLINK_DIALECT}/version.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Connection.hpp
    ${CMAKE_CURRENT_SOURCE_DIR}/include/ThreadSafeQueue.hpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/helpers.hpp
 )
 
-# note that ${public_headers} has to be in quotes
+# Copy mavlink headers into install
+file(GLOB_RECURSE mavlink_headers ${CMAKE_CURRENT_SOURCE_DIR}/build/lib/mavlink/*.h)
+list(APPEND public_headers ${mavlink_headers})
+
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 
 # for CMAKE_INSTALL_INCLUDEDIR definition
