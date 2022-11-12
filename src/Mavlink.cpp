@@ -120,8 +120,6 @@ void Mavlink::handle_param_request_list(const mavlink_message_t& message)
 
 	LOG(GREEN_TEXT "Sending parameters to GCS" NORMAL_TEXT);
 
-	size_t count = 0;
-
 	// Param request_list callback
 	std::vector<Parameter> mavlink_parameters = _mav_param_request_list_cb();
 

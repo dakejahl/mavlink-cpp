@@ -9,4 +9,4 @@
 
 #define LOG(...) do { printf(__VA_ARGS__); puts(""); } while (0)
 
-#define millis() std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()
+#define millis() uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count())

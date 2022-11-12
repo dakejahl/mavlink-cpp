@@ -10,7 +10,7 @@ project("mavlink-cpp"
     VERSION 0.0.1
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-address-of-packed-member")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-address-of-packed-member")
 
 find_package(Threads REQUIRED)
 find_package(Python COMPONENTS Interpreter)
