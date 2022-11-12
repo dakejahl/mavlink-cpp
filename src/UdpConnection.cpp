@@ -196,7 +196,7 @@ void UdpConnection::receive()
 				_remote_ip = inet_ntoa(src_addr.sin_addr);
 				_remote_port = ntohs(src_addr.sin_port);
 				_connected = true;
-				LOG(GREEN_TEXT "Connected to %s:%d -- sysid %u compid %u)" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid, message.compid);
+				LOG(GREEN_TEXT "Connected to %s:%d -- sysid %u compid %u" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid, message.compid);
 			}
 
 			_last_heartbeat_ms = millis();
