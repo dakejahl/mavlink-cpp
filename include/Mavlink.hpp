@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include <ConnectionResult.hpp>
 #include <ThreadSafeQueue.hpp>
 
 #include <mavlink.h>
@@ -61,7 +62,7 @@ public:
 	Mavlink(const ConfigurationSettings& settings);
 	~Mavlink();
 
-	void start();
+	ConnectionResult start();
 	void stop();
 
 	uint8_t sysid() const { return _settings.sysid; };
@@ -110,6 +111,7 @@ private:
 	std::unordered_map<uint16_t, MessageCallback> _message_subscriptions {}; // Mavlink message ID --> callback(mavlink_message_t)
 
 	friend class UdpConnection;
+	friend class SerialConnection;
 };
 
 } // end namespace mavlink

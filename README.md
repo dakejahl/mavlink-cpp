@@ -3,11 +3,19 @@
 A very lightweight and easy to use mavlink library designed for reusability. The goal is an interface that allows you to
 quickly setup a mavlink connection and in only a few lines of code immediately begin sending and receiveing mavlink messages.
 
-## Building the examples
-First you need to build and install the library. Running `make` in the root directory will build the library and install it at
-**install/**. The examples are built as their own CMake project and look for the library at **mavlink-cpp/install**.
+## Building the library
+To just build the library and not install it
 ```
-make && make examples
+make
+```
+To build the library and install it at **/usr/local**
+```
+sudo make install
+```
+
+To build the examples you must first install the library
+```
+make examples
 ```
 
 ## Design

@@ -1,6 +1,7 @@
 #include <Mavlink.hpp>
 
 #include <UdpConnection.hpp>
+#include <SerialConnection.hpp>
 
 namespace mavlink
 {
@@ -14,22 +15,24 @@ Mavlink::~Mavlink()
 	stop();
 }
 
-void Mavlink::start()
+ConnectionResult Mavlink::start()
 {
-	if (_settings.connection_url.find("serial:") != std::string::npos) {
-		// TODO: create serial
+	if (_settings.connection_url.find("serial:") != std::string::npos ||
+	    _settings.connection_url.find("serial_flowcontrol:") != std::string::npos) {
+
+		_connection = std::make_unique<SerialConnection>(this);
 
 	} else if (_settings.connection_url.find("udp:") != std::string::npos) {
 
-		// We provide the connection class with a message handler callback function
 		_connection = std::make_unique<UdpConnection>(this);
-
-		// Spawns thread -- all connection handling happens in that thread context
-		_connection->start();
 
 	} else {
 		LOG("Invalid connection string: %s\nNo connection started", _settings.connection_url.c_str());
+		return ConnectionResult::NotImplemented;
 	}
+
+	// Spawns thread -- all connection handling happens in that thread context
+	return _connection->start();
 }
 
 void Mavlink::stop()
@@ -80,9 +83,9 @@ void Mavlink::send_message(const mavlink_message_t& message)
 void Mavlink::send_heartbeat()
 {
 	mavlink_heartbeat_t hb = {
-		.type = 			_settings.mav_type,
-		.autopilot = 		_settings.mav_autopilot,
-		.system_status = 	MAV_STATE_ACTIVE  // TODO: report failsafes like this? Or something?
+		.type = _settings.mav_type,
+		.autopilot = _settings.mav_autopilot,
+		.system_status = MAV_STATE_ACTIVE  // TODO: report failsafes like this? Or something?
 	};
 
 	mavlink_message_t message;

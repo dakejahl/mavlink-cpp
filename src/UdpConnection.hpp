@@ -24,7 +24,7 @@ class UdpConnection : public Connection
 public:
 	UdpConnection(Mavlink* parent);
 
-	void start() override;
+	ConnectionResult start() override;
 	void stop() override;
 	bool send_message(const mavlink_message_t& message) override;
 
@@ -33,7 +33,7 @@ public:
 	const UdpConnection& operator=(const UdpConnection&) = delete;
 
 private:
-	void setup_port();
+	ConnectionResult setup_port();
 
 	void receive_thread_main();
 	void send_thread_main();

@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
+#include <iostream>
 #include <chrono>
 #include <thread>
 
@@ -32,7 +33,12 @@ int main(int argc, const char** argv)
 		LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid);
 	});
 
-	mavlink->start();
+	auto result = mavlink->start();
+
+	if (result != mavlink::ConnectionResult::Success) {
+		std::cout << "Mavlink connection start failed: " << result << std::endl;
+		return false;
+	}
 
 	LOG("Waiting for connection...");
 	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)

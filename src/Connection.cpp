@@ -14,7 +14,7 @@ bool Connection::connected()
 
 bool Connection::connection_timed_out()
 {
-	return millis() > _last_heartbeat_ms + _connection_timeout_ms;
+	return millis() > _last_received_heartbeat_ms + _connection_timeout_ms;
 }
 
 bool Connection::queue_message(const mavlink_message_t& message)
