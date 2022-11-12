@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +13,7 @@ project("mavlink-cpp"
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-address-of-packed-member")
 
 find_package(Threads REQUIRED)
+find_package(Python COMPONENTS Interpreter)
 
 if (NOT CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     message(STATUS "This project has a top-level one called [${CMAKE_PROJECT_NAME}]")
@@ -41,7 +42,7 @@ set(MAVLINK_GIT_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/mavlink")
 set(MAVLINK_LIBRARY_DIR "${CMAKE_BINARY_DIR}/lib/mavlink")
 
 execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
+    COMMAND ${Python_EXECUTABLE} ${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py
         --lang C --wire-protocol 2.0
         #--no-validate
         #--strict-units
