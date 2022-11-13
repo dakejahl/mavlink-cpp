@@ -6,7 +6,7 @@
 #include <chrono>
 #include <thread>
 
-#include <Mavlink.hpp>
+#include <mavlink-cpp/Mavlink.hpp>
 
 static void signal_handler(int signum);
 
