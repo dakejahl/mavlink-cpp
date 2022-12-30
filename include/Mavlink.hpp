@@ -17,18 +17,6 @@ namespace mavlink
 
 using MessageCallback = std::function<void(const mavlink_message_t&)>;
 
-struct MavCommand {
-	MavCommand() = default;
-	MavCommand(uint8_t sysid, uint8_t compid, uint16_t command)
-		: target_sysid(sysid)
-		, target_compid(compid)
-		, command(command)
-	{}
-	uint8_t target_sysid {};
-	uint8_t target_compid {};
-	uint16_t command {};
-};
-
 struct ConfigurationSettings {
 	std::string connection_url {};
 	uint8_t sysid {};
@@ -78,7 +66,7 @@ public:
 	void send_message(const mavlink_message_t& message);
 	void send_heartbeat();
 	void send_status_text(std::string&& message, MAV_SEVERITY severity = MAV_SEVERITY_CRITICAL);
-	void send_command_ack(const MavCommand& mav_cmd, MAV_RESULT mav_result);
+	void send_command_ack(const mavlink_command_long_t& mav_cmd, MAV_RESULT mav_result);
 
 	//-----------------------------------------------------------------------------
 	// Helpers

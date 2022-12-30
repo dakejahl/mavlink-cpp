@@ -56,6 +56,12 @@ public:
 		_cv.notify_all();
 	};
 
+	bool empty()
+	{
+		std::scoped_lock<std::mutex> lock(_mutex);
+		return _queue.empty();
+	};
+
 private:
 	std::deque<T> _queue {};
 	std::mutex _mutex {};
