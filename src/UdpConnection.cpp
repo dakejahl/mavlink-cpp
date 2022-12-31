@@ -95,6 +95,7 @@ ConnectionResult UdpConnection::setup_port()
 
 bool UdpConnection::send_message(const mavlink_message_t& message)
 {
+	// LOG("[UdpConnection] sending message %u", message.msgid);
 	struct sockaddr_in dest_addr {};
 	dest_addr.sin_family = AF_INET;
 
@@ -126,6 +127,7 @@ void UdpConnection::send_thread_main()
 			}
 
 		} else {
+			LOG("[UdpConnection] waiting for connection");
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}

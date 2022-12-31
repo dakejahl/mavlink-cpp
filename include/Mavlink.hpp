@@ -29,9 +29,7 @@ struct ConfigurationSettings {
 };
 
 struct Parameter {
-
 	std::string name {};
-
 	union {
 		float float_value;
 		int int_value;
@@ -40,6 +38,21 @@ struct Parameter {
 	uint16_t index {};
 	uint16_t total_count {};
 	uint8_t type {}; // MAV_PARAM_TYPE
+};
+
+// This class holds data for the DO_WINCH and DO_GRIPPER commands
+struct MavlinkCommand {
+	MavlinkCommand(uint16_t source_system, uint16_t source_component, uint16_t command, float parameter)
+		: source_system(source_system)
+		, source_component(source_component)
+		, command(command)
+		, parameter(parameter)
+	{}
+
+	uint8_t source_system {};
+	uint8_t source_component {};
+	uint16_t command {};
+	float parameter {};
 };
 
 class Connection;
@@ -66,7 +79,7 @@ public:
 	void send_message(const mavlink_message_t& message);
 	void send_heartbeat();
 	void send_status_text(std::string&& message, MAV_SEVERITY severity = MAV_SEVERITY_CRITICAL);
-	void send_command_ack(const mavlink_command_long_t& mav_cmd, MAV_RESULT mav_result);
+	void send_command_ack(const mavlink::MavlinkCommand& mav_cmd, MAV_RESULT mav_result);
 
 	//-----------------------------------------------------------------------------
 	// Helpers

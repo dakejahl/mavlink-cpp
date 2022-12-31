@@ -70,6 +70,7 @@ void Mavlink::subscribe_to_message(uint16_t message_id, const MessageCallback& c
 void Mavlink::send_message(const mavlink_message_t& message)
 {
 	if (!_connection.get()) {
+		LOG("error connection is nullptr");
 		return;
 	}
 
@@ -77,6 +78,9 @@ void Mavlink::send_message(const mavlink_message_t& message)
 		if (!_connection->queue_message(message)) {
 			LOG(RED_TEXT "Queueing message failed! Message queue full" NORMAL_TEXT);
 		}
+
+	} else {
+		LOG("error connection is not connected");
 	}
 }
 
@@ -175,18 +179,19 @@ void Mavlink::send_param_value(const Parameter& param)
 	send_message(message);
 }
 
-void Mavlink::send_command_ack(const mavlink_command_long_t& mav_cmd, MAV_RESULT result)
+void Mavlink::send_command_ack(const mavlink::MavlinkCommand& mav_cmd, MAV_RESULT result)
 {
 	mavlink_command_ack_t ack = {
 		.command = mav_cmd.command,
 		.result = result,
-		.target_system = mav_cmd.target_system,
-		.target_component = mav_cmd.target_component
+		.target_system = mav_cmd.source_system,
+		.target_component = mav_cmd.source_component
 	};
 
 	mavlink_message_t message;
 	mavlink_msg_command_ack_encode(_settings.sysid, _settings.compid, &message, &ack);
 
+	LOG("sending command_ack: %u", result);
 	send_message(message);
 }
 
