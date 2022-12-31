@@ -42,17 +42,29 @@ struct Parameter {
 
 // This class holds data for the DO_WINCH and DO_GRIPPER commands
 struct MavlinkCommand {
-	MavlinkCommand(uint16_t source_system, uint16_t source_component, uint16_t command, float parameter)
+	MavlinkCommand(uint16_t source_system, uint16_t source_component, const mavlink_command_long_t& msg)
 		: source_system(source_system)
 		, source_component(source_component)
-		, command(command)
-		, parameter(parameter)
+		, command(msg.command)
+		, param1(msg.param1)
+		, param2(msg.param2)
+		, param3(msg.param3)
+		, param4(msg.param4)
+		, param5(msg.param5)
+		, param6(msg.param6)
+		, param7(msg.param7)
 	{}
 
 	uint8_t source_system {};
 	uint8_t source_component {};
 	uint16_t command {};
-	float parameter {};
+	float param1 {};
+	float param2 {};
+	float param3 {};
+	float param4 {};
+	float param5 {};
+	float param6 {};
+	float param7 {};
 };
 
 class Connection;
@@ -85,8 +97,6 @@ public:
 	// Helpers
 	void enable_parameters(std::function<std::vector<Parameter>(void)> request_list_cb,
 			       std::function<bool(Parameter*)> set_cb);
-
-	// bool connected() const { return _connection.get() && _connection->connected(); };
 
 private:
 	ConfigurationSettings settings() { return _settings; };
