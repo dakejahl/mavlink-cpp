@@ -6,3 +6,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(mavlinkcpp_examples)
 
 add_subdirectory(listener)
+add_subdirectory(rid_listener)
