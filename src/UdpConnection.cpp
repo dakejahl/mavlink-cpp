@@ -2,7 +2,6 @@
 #include "MessageParser.hpp"
 #include "Mavlink.hpp"
 
-#include <arpa/inet.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -11,30 +10,28 @@
 namespace mavlink
 {
 
-// TODO: overload constructor to pass in connection target -- target.sysid and target.compid (instead of 1/1 for autopilot)
 UdpConnection::UdpConnection(Mavlink* parent)
 	: Connection(UDP_CONNECTION_TIMEOUT_MS)
 	, _parent(parent)
 {
-	ConfigurationSettings settings = _parent->settings();
+	const ConfigurationSettings& settings = _parent->settings();
 
-	std::string udp = "udp:";
+	// Parse connection string
 	std::string conn = settings.connection_url;
-
-	_emit_heartbeat = settings.emit_heartbeat;
-
+	std::string udp = "udp:";
 	conn.erase(conn.find(udp), udp.length());
-
 	size_t index = conn.find(':');
-	_our_ip = conn.substr(0, index);
+	std::string ip = conn.substr(0, index);
 	conn.erase(0, index + 1);
-	_our_port = std::stoi(conn);
+	int port = std::stoi(conn);
 
-	// Set the target system/component
-	if (settings.target_sysid && settings.target_compid) {
-		_target_sysid = settings.target_sysid;
-		_target_compid = settings.target_compid;
-	}
+	// TODO: error handling for malformed connection string
+
+	_our_ip = ip;
+	_our_port = port;
+	_emit_heartbeat = settings.emit_heartbeat;
+	_target_sysid = settings.target_sysid;
+	_target_compid = settings.target_compid;
 }
 
 ConnectionResult UdpConnection::start()
@@ -197,22 +194,27 @@ void UdpConnection::receive()
 	auto parser = MessageParser(_receive_buffer, recv_len);
 
 	while (parser.parse(&message)) {
-		if (message.msgid == MAVLINK_MSG_ID_HEARTBEAT && message.sysid == _target_sysid && message.compid == _target_compid) {
-			if (connection_timed_out() && !_connected) {
-				_remote_ip = inet_ntoa(src_addr.sin_addr);
-				_remote_port = ntohs(src_addr.sin_port);
-				_connected = true;
-				LOG(GREEN_TEXT "Connected to %s:%d -- sysid %u compid %u" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid, message.compid);
+		if (should_handle_message(message)) {
+
+			if (message.msgid == MAVLINK_MSG_ID_HEARTBEAT) {
+				handle_heartbeat(message, src_addr);
 			}
 
-			_last_received_heartbeat_ms = millis();
-		}
-
-		// Call the message handler callback only if we're still connect to the target system
-		if (_connected) {
 			_parent->handle_message(message);
 		}
 	}
+}
+
+void UdpConnection::handle_heartbeat(const mavlink_message_t& message, const sockaddr_in& socket_addr)
+{
+	if (connection_timed_out() && !_connected) {
+		_remote_ip = inet_ntoa(socket_addr.sin_addr);
+		_remote_port = ntohs(socket_addr.sin_port);
+		_connected = true;
+		LOG(GREEN_TEXT "Connected to %s:%d -- sysid %u compid %u" NORMAL_TEXT, _remote_ip.c_str(), _remote_port, message.sysid, message.compid);
+	}
+
+	_last_received_heartbeat_ms = millis();
 }
 
 } // end namespace mavlink

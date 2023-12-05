@@ -1,4 +1,5 @@
 all:
+	@astyle --quiet --options=astylerc --recursive "src/*.cpp,*.hpp" "include/*.hpp" "examples/*.cpp,*.hpp"
 	@cmake -Bbuild -H.; cmake --build build -j 12
 
 install:

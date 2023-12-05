@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <time.h>
+#include <arpa/inet.h>
 
 #include "Connection.hpp"
 #include <helpers.hpp>
@@ -40,6 +41,8 @@ private:
 
 	void receive();
 
+	void handle_heartbeat(const mavlink_message_t& message, const sockaddr_in& socket_addr);
+
 	// Our IP and port
 	std::string _our_ip {};
 	int _our_port {};
@@ -59,7 +62,6 @@ private:
 	char* _datagram {};
 	unsigned _datagram_len {};
 
-	// std::function<void(const mavlink_message_t& message)> _message_handler;
 	Mavlink* _parent {};
 };
 

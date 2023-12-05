@@ -29,7 +29,7 @@ int main(int argc, const char** argv)
 
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
-	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message){
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) {
 		LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid);
 	});
 
@@ -41,12 +41,14 @@ int main(int argc, const char** argv)
 	}
 
 	LOG("Waiting for connection...");
+
 	// Waits for connection interface to discover an autopilot (sysid=1 && compid=1)
 	while (!mavlink->connected() && !_should_exit) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	static bool connected = true;
+
 	// Main loop
 	while (!_should_exit) {
 

@@ -17,6 +17,7 @@ public:
 	bool connected();
 	bool connection_timed_out();
 	bool queue_message(const mavlink_message_t& message);
+	bool should_handle_message(const mavlink_message_t& message);
 
 	virtual ConnectionResult start() = 0;
 	virtual void stop() = 0;
@@ -27,8 +28,8 @@ public:
 protected:
 	ThreadSafeQueue<mavlink_message_t> _message_outbox_queue {100};
 
-	uint8_t _target_sysid {1};
-	uint8_t _target_compid {1};
+	uint8_t _target_sysid {};
+	uint8_t _target_compid {};
 
 	bool _initialized {};
 	bool _connected {};

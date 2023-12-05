@@ -18,14 +18,14 @@ namespace mavlink
 using MessageCallback = std::function<void(const mavlink_message_t&)>;
 
 struct ConfigurationSettings {
-	std::string connection_url {};
-	uint8_t sysid {};
-	uint8_t compid {};
-	uint8_t target_sysid {};
-	uint8_t target_compid {};
-	uint8_t mav_type {};
-	uint8_t mav_autopilot {};
-	bool emit_heartbeat {};
+	std::string connection_url {};  // Connection string format -- udp://0.0.0.0:14561
+	uint8_t sysid {};               // System ID of this system
+	uint8_t compid {};              // Component ID of this system
+	uint8_t target_sysid {};        // System ID to connect to. If set to 0 all messages from all systems will be handled.
+	uint8_t target_compid {};       // Component ID to connect to. If set to 0 all messages from all components of a system will be handled.
+	uint8_t mav_type {};            // See https://mavlink.io/en/messages/common.html#MAV_TYPE
+	uint8_t mav_autopilot {};       // see https://mavlink.io/en/messages/common.html#MAV_AUTOPILOT
+	bool emit_heartbeat {};         // If set to true will emit heartbeats at 1Hz
 };
 
 struct Parameter {
@@ -37,10 +37,9 @@ struct Parameter {
 
 	uint16_t index {};
 	uint16_t total_count {};
-	uint8_t type {}; // MAV_PARAM_TYPE
+	uint8_t type {}; // See https://mavlink.io/en/messages/common.html#MAV_PARAM_TYPE
 };
 
-// This class holds data for the DO_WINCH and DO_GRIPPER commands
 struct MavlinkCommand {
 	MavlinkCommand(uint16_t source_system, uint16_t source_component, const mavlink_command_long_t& msg)
 		: source_system(source_system)
@@ -99,7 +98,7 @@ public:
 			       std::function<bool(Parameter*)> set_cb);
 
 private:
-	ConfigurationSettings settings() { return _settings; };
+	const ConfigurationSettings& settings() const { return _settings; };
 
 	//-----------------------------------------------------------------------------
 	// Message handlers
