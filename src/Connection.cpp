@@ -28,7 +28,7 @@ bool Connection::should_handle_message(const mavlink_message_t& message)
 
 	if (_target_sysid == 0) {
 		// Handle messages from all components of all systems
-		handle == true;
+		handle = true;
 
 	} else if (_target_compid == 0)  {
 		// Handle messages from all components of a system
