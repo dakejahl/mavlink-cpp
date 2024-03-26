@@ -19,7 +19,7 @@ int main(int argc, const char** argv)
 	setbuf(stdout, NULL); // Disable stdout buffering
 
 	mavlink::ConfigurationSettings mavlink_settings = {
-		.connection_url = "udp://192.168.1.34:14550",
+		.connection_url = "serial:///dev/ttyUSB0:57600",
 		.sysid = 255,
 		.compid = 1,
 		.mav_type = MAV_TYPE_GCS,
