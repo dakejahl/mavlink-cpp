@@ -19,18 +19,26 @@ int main(int argc, const char** argv)
 	setbuf(stdout, NULL); // Disable stdout buffering
 
 	mavlink::ConfigurationSettings mavlink_settings = {
-		.connection_url = "udp://127.0.0.1:14561",
-		.sysid = 1,
-		.compid = 123,
-		.mav_type = MAV_TYPE_WINCH,
+		.connection_url = "udp://192.168.1.34:14550",
+		.sysid = 255,
+		.compid = 1,
+		.mav_type = MAV_TYPE_GCS,
 		.mav_autopilot = MAV_AUTOPILOT_INVALID,
-		.emit_heartbeat = true
+		.emit_heartbeat = false
 	};
 
 	auto mavlink = std::make_shared<mavlink::Mavlink>(mavlink_settings);
 
 	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HEARTBEAT, [](auto message) {
-		LOG("MAVLINK_MSG_ID_HEARTBEAT -- %u/%u", message.sysid, message.compid);
+		LOG("HEARTBEAT -- %u/%u", message.sysid, message.compid);
+	});
+
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_OPTICAL_FLOW_RAD, [](auto message) {
+		LOG("OPTICAL_FLOW_RAD -- %u/%u", message.sysid, message.compid);
+	});
+
+	mavlink->subscribe_to_message(MAVLINK_MSG_ID_HIGHRES_IMU, [](auto message) {
+		LOG("HIGHRES_IMU -- %u/%u", message.sysid, message.compid);
 	});
 
 	auto result = mavlink->start();
