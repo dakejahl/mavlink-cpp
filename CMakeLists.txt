@@ -85,26 +85,6 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:build/lib/mavlink/${MAVLINK_DIALECT}>
 )
 
-# note that it is not CMAKE_INSTALL_PREFIX we are checking here
-if(DEFINED CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    message(
-        STATUS
-        "CMAKE_INSTALL_PREFIX is not set\n"
-        "Default value: ${CMAKE_INSTALL_PREFIX}\n"
-        "Will set it to ${CMAKE_SOURCE_DIR}/install"
-    )
-    set(CMAKE_INSTALL_PREFIX
-        "${CMAKE_SOURCE_DIR}/install"
-        CACHE PATH "Where the library will be installed to" FORCE
-    )
-else()
-    message(
-        STATUS
-        "CMAKE_INSTALL_PREFIX was already set\n"
-        "Current value: ${CMAKE_INSTALL_PREFIX}"
-    )
-endif()
-
 # Set public header list, this is the list of headers to be installed
 set(public_headers
    ${CMAKE_CURRENT_SOURCE_DIR}/include/Mavlink.hpp
